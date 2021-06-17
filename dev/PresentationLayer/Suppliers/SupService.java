@@ -4,12 +4,11 @@ import BusinessLayer.Facade;
 import BusinessLayer.Suppliers.*;
 import BusinessLayer.Suppliers.OutgoingOrder;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
-    public class SupService {
+public class SupService {
         public static Scanner io = new Scanner(System.in);
+
         BusinessLayer.Facade facade;
 
         public SupService(Facade facade){
@@ -47,7 +46,7 @@ import java.util.Scanner;
             while (true) {
                 System.out.println("*** Item Order menu ***");
                 System.out.println("Please select an option:");
-                System.out.println("1)  Add New Order ");
+                System.out.println("1)  Add Product To Existing Weekly Order ");
                 System.out.println("2)  Show Order by Id Order");
                 System.out.println("3)  Show Order for a Supplier");
                 System.out.println("4)  Print supplier serial numbers for existing order");
@@ -91,12 +90,16 @@ import java.util.Scanner;
             long id_order = io.nextLong();
             OutgoingOrder order=facade.ShowOrder(id_order);
             if(order==null){
-                System.out.println("Order:\t"+id_order+"\tisn't Exist");
+                System.out.println("Weekly Order #\t"+id_order+"\tDoesn't Exist");
             }
-            else {
+            else
                 System.out.println(order);
 
-            }
+            order=facade.ShowUrgentOrder(id_order);
+            if(order==null)
+                System.out.println("Urgent Order #\t"+id_order+"\tDoesn't Exist");
+            else
+                System.out.println(order);
         }
 
         private void ShowOrderBySupplier() {
@@ -130,6 +133,7 @@ import java.util.Scanner;
                 System.out.println("5) Add New Supplier ");
                 System.out.println("6) Delete Supplier");
                 System.out.println("7) Add a contract to an existing supplier");
+//                System.out.println("8) add product to existing supplier");
                 System.out.println("8) Back to main Menu");
                 int op = io.nextInt();
                 switch (op) {
@@ -160,9 +164,7 @@ import java.util.Scanner;
 
                     }
                     case 7:{
-                        System.out.println("Enter supplier ID to add a contract");
-                        Integer supplier_id=io.nextInt();
-                        AddSupplierContract(supplier_id);
+                        addSupContract();
                         break;
                     }
 
@@ -174,9 +176,79 @@ import java.util.Scanner;
                 }
             }
 
-        private void AddSupplierContract(Integer supplier_id) {
-            facade.AddSupplierContract(supplier_id);
+    private void addSupContract() {
+        System.out.println("Enter supplier ID to add a contract");
+        Integer supplier_id=io.nextInt();
+        //Scanner io = new Scanner(System.in);
+        System.out.println("Insert Day of Supply:");
+        String  days = io.next();
+        System.out.println("Insert pickup location:");
+        String location=io.useDelimiter("\n").next();
+        System.out.println("Is needed delivery? ");
+        System.out.println("y/n");
+        String delivery = io.next();
+        boolean NeedDelivery;
+        NeedDelivery=delivery.compareTo("y")==0;
+        HashMap<Integer,Integer> totalPriceDiscount = new HashMap<Integer, Integer>();
+        System.out.println("Do you want enter a PRICE BASED discount?");
+        System.out.println("y/n");
+        String y_discount = io.next();
+        int amount;
+        int precent;
+
+        while (y_discount.compareTo("y")==0){
+            System.out.println("enter amount products: ");
+            amount= io.nextInt();
+            System.out.println("enter the discount percent for amount: "+ amount);
+            precent=io.nextInt();
+            totalPriceDiscount.put(amount,precent);
+
+
+            System.out.println("Do you want enter more discounts?");
+            System.out.println("y/n");
+            y_discount = io.next();
+
         }
+        facade.AddSupplierContract(supplier_id,days,location,NeedDelivery,totalPriceDiscount);
+    }
+    private void addSupContract(int supId) {
+
+        Integer supplier_id=supId;
+        System.out.println("Insert Day of Supply:");
+        String  days = io.next();
+        System.out.println("Insert pickup location:");
+        String location=io.useDelimiter("\n").next();
+        System.out.println("Is needed delivery? ");
+        System.out.println("y/n");
+        String delivery = io.next();
+        boolean NeedDelivery;
+        NeedDelivery=delivery.compareTo("y")==0;
+        HashMap<Integer,Integer> totalPriceDiscount = new HashMap<Integer, Integer>();
+        System.out.println("Do you want enter a PRICE BASED discount?");
+        System.out.println("y/n");
+        String y_discount = io.next();
+        int amount;
+        int precent;
+
+        while (y_discount.compareTo("y")==0){
+            System.out.println("enter amount products: ");
+            amount= io.nextInt();
+            System.out.println("enter the discount percent for amount: "+ amount);
+            precent=io.nextInt();
+            totalPriceDiscount.put(amount,precent);
+
+
+            System.out.println("Do you want enter more discounts?");
+            System.out.println("y/n");
+            y_discount = io.next();
+
+        }
+        facade.AddSupplierContract(supplier_id,days,location,NeedDelivery,totalPriceDiscount);
+    }
+
+//    private void AddSupplierContract(Integer supplier_id,String days,String location,boolean NeedDelivery,HashMap<Integer,Integer> totalPriceDiscount) {
+//            facade.AddSupplierContract(supplier_id,days,location,NeedDelivery,totalPriceDiscount);
+//        }
 
         private void printProductSerialNumber(Integer supplier_id){
             System.out.println(facade.printProductSerialNumber(supplier_id));
@@ -209,7 +281,13 @@ import java.util.Scanner;
             String name = io.next();
 
             System.out.println("Insert Contact:");
-            String contact = io.next();
+            String contact="";
+            System.out.println("\tContact Name:");
+            contact=io.useDelimiter("\n").next();
+            System.out.println("\tContact Phone Number:");
+            contact+=" "+io.next();
+
+
             List<String> Contacts = new LinkedList<>();
             Contacts.add(contact);
 
@@ -219,7 +297,39 @@ import java.util.Scanner;
             System.out.println("Insert  a Bank Account:");
             String bank = io.next();
             facade.AddNewSupplier(id,company,name,Contacts,payment,bank);
-            System.out.println("Supplier was Successfully added , you may add a Contract");
+
+            System.out.println("Supplier was Successfully added, please add a Contract");
+            addSupContract(id);
+
+            System.out.println("\nPlease add products for the new supplier "+name+" id #"+id);
+
+            HashMap<Integer,Double> prodsDiscount = new HashMap<>();
+            System.out.println("Insert  products name(example: apple,avocado,...):");
+            String prodsName = io.next();
+            String[] prodsN = prodsName.split(",");
+            for(String prod : prodsN){
+                System.out.println("what is the price for "+ prod+"?" );
+                Double price = io.nextDouble();
+                System.out.println("what is the weight of "+ prod+"?" );
+                double weight = io.nextDouble();
+                System.out.println("what is the serial number for "+ prod+"?" );
+                Long serialNum = io.nextLong();
+                System.out.println("Do you have discount for " + prod + "? (y/n)");
+                String yn = io.next();
+                while(yn.equals("y")){
+                    System.out.println("what is the amount needed for discount?");
+                    int amount = io.nextInt();
+                    System.out.println("what is the discount percent?");
+                    double percent = io.nextDouble();
+                    prodsDiscount.put(amount,percent);
+                    System.out.println("Do you want to add another discount for "+ prod+"? (y/n)");
+                    yn = io.next();
+                }
+
+                facade.addProductPerSup(prod,id,price,weight,serialNum,prodsDiscount);
+            }
+
+//            System.out.println("Supplier was Successfully added , you may add a Contract");
         }
         private void showContacts() { //done
             System.out.println("what is the ID Supplier");
@@ -255,8 +365,10 @@ import java.util.Scanner;
             System.out.println("what is the ID Supplier");
             int id_sup= io.nextInt();
             if (facade.IsSupplierExistInSystem(id_sup)) {
-                System.out.println("write the contact information");
-                String new_contact = io.next();
+                System.out.println("write the contact name:");
+                String new_contact = io.useDelimiter("\n").next();
+                System.out.println("write the contact phone number:");
+                new_contact += " " + io.next();
                 facade.AddContact(id_sup, new_contact);
             }
             else {

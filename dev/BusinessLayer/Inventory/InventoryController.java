@@ -12,21 +12,34 @@ public class InventoryController {
     public InventoryController () {
         this.products = new LinkedList<>();
         this.categories = new LinkedList<>();
-
     }
     public void addCatFromData(Category c){
         if(!categories.contains(c)){
             categories.add(c);
         }
     }
-    public Category addCategory(String name, List<String> subCatName){
-        List<Category> mySub = new LinkedList<>();
-        for(String s : subCatName){
-            Category subC = new Category(s,new LinkedList<>());
-            mySub.add(subC);
-            categories.add(subC);
+    public List<Product> getAllProd(){
+        return products;
+    }
+    public List<Category> getAllCategories(){
+        return categories;
+    }
+    public String showAllProds(){
+        String s ="";
+        for (Product p : products){
+            s+=p.printProduct();
         }
-        Category cat = new Category(name,mySub);
+        return s;
+    }
+    public String showAllCats(){
+        String s ="";
+        for (Category c : categories){
+            s+=c.printCategory();
+        }
+        return s;
+    }
+    public Category addCategory(String name){
+        Category cat = new Category(name);
         if(!categories.contains(cat))
             categories.add(cat);
         return cat;
@@ -60,8 +73,13 @@ public class InventoryController {
         p.getCategory().addProduct(p);
         return p;
     }
+    public void deleteProduct(int id){
+        for(Product p : products){
+            if(p.getId() == id)
+                products.remove(p);
+    }}
 
-//    public void addCategory (String name, List<Category> subCategories) {
+    //    public void addCategory (String name, List<Category> subCategories) {
 //        Category c = new Category(name,subCategories);
 //        if (!categories.contains(c))
 //            categories.add(c);
@@ -128,7 +146,7 @@ public class InventoryController {
 
     public boolean setStorageQuantity(String name, int storageQuantity){
         Product p = getProduct(name);
-       return p.setStorageQuantity(storageQuantity);
+        return p.setStorageQuantity(storageQuantity);
     }
 
     public String printProduct(String name){
@@ -162,11 +180,22 @@ public class InventoryController {
     }
     public String displayPFSHistory(String prodName){
         Product p = getProduct(prodName);
-       return p.displayPriceFromSupHistory();
+        return p.displayPriceFromSupHistory();
     }
     public String displayPTCHistory(String prodName){
         Product p = getProduct(prodName);
         return p.displayPriceToCusHistory();
     }
-
+    public void setFirstId(int lastId) {
+        if (!products.isEmpty())
+            Product.ID = lastId + 1;
+    }
+    public void deleteCat(String cat){
+        for (Category c: categories) {
+            if (c.getName().equals(cat)) {
+                categories.remove(c);
+                return;
+            }
+        }
+    }
 }

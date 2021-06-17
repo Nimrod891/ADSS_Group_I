@@ -8,7 +8,7 @@ import java.util.*;
 
 public class InvService {
     public static Scanner s = new Scanner(System.in);
-//            .useDelimiter("\n");
+    //            .useDelimiter("\n");
     Facade facade;
 
     public InvService(Facade facade){
@@ -22,31 +22,52 @@ public class InvService {
                     "2)\tCategory menu\n" +
                     "3)\tStock report menu\n" +
                     "4)\tDefective report\n" +
-                    "5)\tExit"
+                    "5)\tReceive Delivery\n"+
+                    "6)\tSet periodic order day\n"+
+                    "7)\tExit"
             );
-                int choice = s.nextInt();
-                switch (choice) {
-                    case 1:
-                        productMenu();
-                        break;
-                    case 2:
-                        categoryMenu();
-                        break;
-                    case 3:
-                        stockReport();
-                        break;
-                    case 4:
-                        defectiveReport();
-                        break;
-                    case 5:
-                        return;
-                    default:
-                        System.out.println("Not a valid option, please try again.\n");
-                        break;
-                }
+            int choice = s.nextInt();
+            switch (choice) {
+                case 1:
+                    productMenu();
+                    break;
+                case 2:
+                    categoryMenu();
+                    break;
+                case 3:
+                    stockReport();
+                    break;
+                case 4:
+                    defectiveReport();
+                    break;
+                case 5:
+                    acceptDelivery();
+                    break;
+                case 6:
+                    setDayOfPeriodicOrder();
+                    break;
+                case 7:
+                    return;
+                default:
+                    System.out.println("Not a valid option, please try again.\n");
+                    break;
+            }
         }
         while (true) ;
     }
+
+    private void setDayOfPeriodicOrder() {
+        System.out.println("Insert the number of the requested day (1-sunday, 2-monday,...)- ");
+        int day = s.nextInt();
+        if(day < 1 || day > 7){
+            System.out.println("Invalid day, try again");
+        }
+        else{
+            facade.setOrderDay(day);
+            System.out.println("The periodic order's day successfully changed");
+        }
+    }
+
     public void productMenu(){
         while (true) {
             System.out.println("\t\tProduct menu:\n\n" +
@@ -62,7 +83,9 @@ public class InvService {
                     "10)\tDisplay product\n" +
                     "11)\tDisplay product price from suppler history\n" +
                     "12)\tDisplay product price to customer history\n" +
-                    "13)\tExit"
+                    "13)\tDelete Product\n" +
+                    "14)\tDisplay all products\n" +
+                    "15)\tExit"
             );
 
             int choice = s.nextInt();
@@ -104,6 +127,12 @@ public class InvService {
                     productPTCHistory();
                     break;
                 case 13:
+                    deleteProduct();
+                    break;
+                case 14:
+                    System.out.println(facade.showAllProds());
+                    break;
+                case 15:
                     return;
                 default:
                     System.out.println("Not a valid option, please try again.\n");
@@ -112,13 +141,27 @@ public class InvService {
         }
     }
 
+    private void deleteProduct() {
+        System.out.print("\nProduct's name- ");
+        String product = s.next();
+        int id = -1;
+        id = facade.getProdIDByName(product);
+        if(id == -1)
+            System.out.println("Product does not exist");
+        else{
+            facade.deleteProduct(id);
+            System.out.println("Product " + product + " successfully deleted");
+        }
+
+    }
+
     private void updateDefectiveQuantity() {
         System.out.print("\nProduct's name- ");
         String product = s.next();
         System.out.println("\nDefective item count- ");
         int quantity = s.nextInt();
         System.out.println(facade.setDefectiveItems(product,quantity));
-       // String result = facade.
+        // String result = facade.
     }
 
     private void updateDiscount(){
@@ -141,7 +184,39 @@ public class InvService {
         System.out.println(facade.setProdDiscount(product,discount,disDate));
         // String result = facade.
     }
-
+    private void acceptDelivery() {
+        Map<Long, Integer> missingProds = new HashMap<>();
+        Map<Long, Integer> defectiveProds = new HashMap<>();
+        ;
+        System.out.print("\nEnter order's ID- ");
+        int orderId = s.nextInt();
+        List<String> prodNames = facade.getProdFromOrder(orderId);
+        if (prodNames == null) {
+            System.out.print("\nNo such order \n");
+            return;
+        }
+        for (String prodName : prodNames) {
+            System.out.print("\nIs there missing products from " + prodName + " write y/n- ");
+            String missing = s.next();
+            if (missing.equals("y")) {
+                System.out.print("\nHow many product are missing from " + prodName + "- ");
+                int quantityMissing = s.nextInt();
+                int prodId = facade.getProdIdByName(prodName);
+                if (prodId != -1)
+                    missingProds.put((long) prodId, quantityMissing);
+                System.out.print("\nIs there defective products from " + prodName + " write y/n- ");
+                String defective = s.next();
+                if (defective.equals("y")) {
+                    System.out.print("\nHow many product are defective from " + prodName + "- ");
+                    int quantityDef = s.nextInt();
+                    prodId = facade.getProdIdByName(prodName);
+                    if (prodId != -1)
+                        defectiveProds.put((long) prodId, quantityDef);
+                }
+            }
+        }
+        System.out.println(facade.acceptDelivery(orderId,missingProds,defectiveProds));
+    }
     private void updateMinimumQuantity() {
         System.out.print("\nProduct's name- ");
         String product = s.next();
@@ -304,7 +379,8 @@ public class InvService {
                     "5)\tset category discount date\n" +
                     "6)\tDisplay category\n" +
                     "7)\tdelete category\n" +
-                    "8)\tExit"
+                    "8)\tDisplay all categories\n" +
+                    "9)\tExit"
             );
 
             int choice = s.nextInt();
@@ -331,6 +407,9 @@ public class InvService {
                     deleteCategory();
                     break;
                 case 8:
+                    System.out.println(facade.showAllCats());
+                    break;
+                case 9:
                     return;
                 default:
                     System.out.println("Not a valid option, please try again.\n");
@@ -341,18 +420,13 @@ public class InvService {
     private void deleteCategory(){
         System.out.print("Category's name- ");
         String catName = s.next();
-        facade.deleteCategory(catName);
+        System.out.println(facade.deleteCategory(catName));
     }
     private void addCategory(){
         System.out.print("Category's name- ");
         String catName = s.next();
-        System.out.print("Category's sub-categories(string,string,..)- ");
-        String subCat = s.next();
-        String[] a = subCat.split(",");
-        List<String> subC = new LinkedList<>();
-        for(int i = 0; i< a.length; i++)
-            subC.add(a[i]);
-        System.out.println(facade.addCategory(catName,subC));
+        System.out.println(facade.addCategory(catName));
+
     }
     private void addSubCat(){
         System.out.print("Main category's name- ");
@@ -361,6 +435,7 @@ public class InvService {
         String subCat = s.next();
 
         System.out.println(facade.addSub(mainCat,subCat));
+        facade.addSup(mainCat,subCat);
     }
     private void deleteSubCat(){
         System.out.print("Main category's name- ");
@@ -369,6 +444,7 @@ public class InvService {
         String subCat = s.next();
 
         System.out.println(facade.deleteSubCat(mainCat,subCat));
+        facade.deleteSup(subCat);
     }
     private void printCategory(){
         System.out.print("Category's name- ");
@@ -394,7 +470,23 @@ public class InvService {
         }
         System.out.println(facade.setCatDiscount(catName,discount,disDate));
     }
-    private void setCatDiscDate(){}
+    private void setCatDiscDate(){
+        System.out.print("\nCategory's name- ");
+        String catName = s.next();
+        boolean dateCorrect = false;
+        Date disDate = new Date();
+        while (!dateCorrect) {
+            try {
+                System.out.print("\nDiscount expiration date (DD/MM/YYYY)- ");
+                Date exDate = new SimpleDateFormat("dd/MM/yyyy").parse(s.next());
+                disDate = exDate;
+                dateCorrect = true;
+            } catch (ParseException e) {
+                System.out.print("\nDate format incorrect, please try again. ");
+            }
+        }
+        System.out.println(facade.setCatDisDate(catName,disDate));
+    }
     private void stockReport(){
         while (true) {
             System.out.println("\t\tStock report menu:\n\n" +
@@ -424,7 +516,17 @@ public class InvService {
         }
 
     }
-
+    private void changeDay(){
+        System.out.println("On choose the number of the day you would like to send the report on:\n" +
+                "1)\tSunday\n" +
+                "2)\tMonday\n" +
+                "3)\tTuesday\n" +
+                "4)\tWednesday\n" +
+                "5)\tThursday\n" +
+                "6)\tFriday\n" +
+                "7)\tSaturday\n");
+        facade.setOrderDay(s.nextInt());
+    }
     private void addStockRep(){
         System.out.print("\nWhich categories to include in the report- ");
         String catsNames = s.next();
@@ -446,9 +548,10 @@ public class InvService {
         int id = s.nextInt();
         System.out.println(facade.exportStockReport(id));
     }
+
     private void defectiveReport(){
         while (true) {
-            System.out.println("\t\tDefective report menu:\n\n" +
+            System.out.println("\t\tStock report menu:\n\n" +
                     "1)\tadd defective Report\n" +
                     "2)\tadd product to defective report\n" +
                     "3)\texport defective report\n" +
